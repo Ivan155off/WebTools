@@ -3855,10 +3855,11 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                         console.log('FFmpeg log:', message);
                     });
 
-                    // Local files in repo root - same-origin, no CORS issues
+                    // All core files served locally - no CORS issues
                     await ffmpeg.load({
                         coreURL: "./ffmpeg-core.js",
                         wasmURL: "./ffmpeg-core.wasm",
+                        workerURL: "./ffmpeg-worker.js",
                     });
                 } catch (err) {
                     showToast('❌ Conversion failed: ' + err.message);
