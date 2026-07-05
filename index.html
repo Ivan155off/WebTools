@@ -3848,7 +3848,7 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                     await new Promise((resolve, reject) => {
                         if (window.crossOriginIsolated) return resolve();
                         const s = document.createElement('script');
-                        s.src = 'https://unpkg.com/coi-serviceworker@0.1.7/coi-serviceworker.min.js';
+                        s.src = './coi-serviceworker.min.js';
                         s.onload = resolve;
                         s.onerror = reject;
                         document.head.appendChild(s);
