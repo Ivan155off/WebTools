@@ -3839,28 +3839,26 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
             const isImage = ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(origExt);
             
             if ((isVideo || isAudio) && targetFormat !== 'custom' && !targetFormat.startsWith('decode_')) {
-                // Client-side local conversion via FFmpeg.wasm
+                // Client-side local conversion via FFmpeg.wasm (v0.9.x - no Worker CORS issues)
                 let ffmpeg;
                 let fetchFile;
                 try {
-                    // toBlobURL fetches the script and wraps it in a same-origin Blob URL,
-                    // bypassing the cross-origin Worker restriction on GitHub Pages.
-                    const { FFmpeg } = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js");
-                    const { fetchFile: _fetchFile } = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js");
+                    // v0.9.x loads a script tag style - no Worker spawning = no CORS errors on GitHub Pages
+                    await new Promise((resolve, reject) => {
+                        if (window.FFmpeg) return resolve();
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js';
+                        s.onload = resolve;
+                        s.onerror = () => reject(new Error('Failed to load FFmpeg script'));
+                        document.head.appendChild(s);
+                    });
+                    const { createFFmpeg, fetchFile: _fetchFile } = window.FFmpeg;
                     fetchFile = _fetchFile;
-
-                    ffmpeg = new FFmpeg();
-
-                    ffmpeg.on('log', ({ message }) => {
-                        console.log('FFmpeg log:', message);
+                    ffmpeg = createFFmpeg({
+                        corePath: './ffmpeg-core.js',
+                        log: true,
                     });
-
-                    // All core files served locally - no CORS issues
-                    await ffmpeg.load({
-                        coreURL: "./ffmpeg-core.js",
-                        wasmURL: "./ffmpeg-core.wasm",
-                        workerURL: "./ffmpeg-worker.js",
-                    });
+                    await ffmpeg.load();
                 } catch (err) {
                     showToast('❌ Conversion failed: ' + err.message);
                     throw err; // Re-throw to halt
@@ -3869,10 +3867,10 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                 const inputName = 'input.' + origExt;
                 const outputName = 'output.' + targetFormat;
                 
-                try { await ffmpeg.deleteFile(inputName); } catch (e) {}
+                try { ffmpeg.FS('unlink', inputName); } catch (e) {}
                 
                 const fileDataToConvert = item.isEdited && item.editedContent !== null ? new Blob([item.editedContent]) : item.fileObject;
-                await ffmpeg.writeFile(inputName, await fetchFile(fileDataToConvert));
+                ffmpeg.FS('writeFile', inputName, await fetchFile(fileDataToConvert));
                 
                 const audioBitrate = document.getElementById('converterAudioBitrate')?.value || '192k';
                 const videoResolution = document.getElementById('converterVideoResolution')?.value || 'same';
@@ -3891,10 +3889,10 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                 }
                 ffmpegArgs.push(outputName);
                 
-                await ffmpeg.exec(ffmpegArgs);
+                await ffmpeg.run(...ffmpegArgs);
                 
-                const fileData = await ffmpeg.readFile(outputName);
-                outputBlob = new Blob([fileData.buffer], { type: isAudio ? 'audio/' + targetFormat : 'video/' + targetFormat });
+                const fileData = ffmpeg.FS('readFile', outputName);
+                outputBlob = new Blob([fileData.buffer || fileData], { type: isAudio ? 'audio/' + targetFormat : 'video/' + targetFormat });
                 
             } else if (isImage) {
                 // Convert image format via Canvas
