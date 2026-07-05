@@ -1626,6 +1626,11 @@ function highlightCodeSyntax(text) {
 let _currentFileExt = '';
 function renderEditorContent(rawText) {
     if (!rawText) rawText = '';
+    // Truncate very large text to prevent browser crash on huge base64/hex files
+    const MAX_RENDER = 500000;
+    if (rawText.length > MAX_RENDER) {
+        rawText = rawText.slice(0, MAX_RENDER) + '\n\n[... File truncated for display - too large to show fully ...]';
+    }
     const e = _currentFileExt;
     const plainExts = new Set(['txt', 'log', 'nfo', 'inf', 'reg', 'text', 'csv', 'tsv', 'ini', 'cfg', 'conf', 'env', 'properties', 'lock', 'pem', 'crt', 'key']);
     const codeExts  = new Set(['js', 'ts', 'jsx', 'tsx', 'json', 'py', 'rs', 'go', 'java', 'kt', 'c', 'cpp', 'h', 'hpp', 'swift', 'dart', 'lua', 'rb', 'php', 'sh', 'bash', 'bat', 'ps1', 'sql', 'graphql', 'gql', 'r', 'pl', 'm', 'yaml', 'yml', 'toml', 'gradle', 'cmake', 'dockerfile', 'md']);
@@ -1659,7 +1664,9 @@ function renderEditorContent(rawText) {
 
 function updateLineCounters() {
     const lines = virtualConsole.innerText.split('\n').length;
-    lineCounterBlock.innerHTML = Array.from({ length: lines }, (_, i) => `<div>${i + 1}<\/div>`).join('');
+    // Limit to 5000 lines to prevent browser crash on huge files (e.g. base64)
+    const renderLines = Math.min(lines, 5000);
+    lineCounterBlock.innerHTML = Array.from({ length: renderLines }, (_, i) => `<div>${i + 1}<\/div>`).join('');
 }
 
 editorToggleBtn.addEventListener('click', () => {
@@ -3881,7 +3888,8 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                 });
                 
                 outputBlob = new Blob(chunks, { type: mimeType });
-                audioCtx.close();
+                // Note: don't close audioCtx immediately - let GC handle it
+                setTimeout(() => audioCtx.close(), 1000);
                 
             } else if (isVideo && targetFormat !== 'custom' && !targetFormat.startsWith('decode_')) {
                 // Video conversion via MediaRecorder (browser-native, no FFmpeg needed)
@@ -4145,9 +4153,8 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                 }
             }
             
-            // Download the converted file immediately
-            _doDownload(outputBlob, newFileName);
-            showToast('✨ Converted: ' + newFileName);
+            // Save converted file to workspace (history) - user can download from there
+            saveNewFileToWorkspace(newFileName, outputBlob, outputText);
             converterModal.classList.remove('active');
             
         } catch (e) {
@@ -4180,7 +4187,7 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
         const req = store.add(record);
         
         req.onsuccess = () => {
-            showToast(`✨ Converted & added: ${filename}`);
+            showToast(`✅ Converted! '${filename}' added to file list`);
             loadFilesFromDB();
         };
         
