@@ -3839,15 +3839,15 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
             const isImage = ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(origExt);
             
             if ((isVideo || isAudio) && targetFormat !== 'custom' && !targetFormat.startsWith('decode_')) {
-                // Client-side local conversion via FFmpeg.wasm (v0.9.x - no Worker CORS issues)
+                // Client-side local conversion via FFmpeg.wasm v0.9.x
                 let ffmpeg;
                 let fetchFile;
                 try {
-                    // v0.9.x loads a script tag style - no Worker spawning = no CORS errors on GitHub Pages
+                    // Load ffmpeg.min.js as a script tag (sets window.FFmpeg)
                     await new Promise((resolve, reject) => {
-                        if (window.FFmpeg) return resolve();
+                        if (window.FFmpeg && window.FFmpeg.createFFmpeg) return resolve();
                         const s = document.createElement('script');
-                        s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js';
+                        s.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js';
                         s.onload = resolve;
                         s.onerror = () => reject(new Error('Failed to load FFmpeg script'));
                         document.head.appendChild(s);
@@ -3855,7 +3855,7 @@ document.getElementById('termsModal').addEventListener('click',   e => { if(e.ta
                     const { createFFmpeg, fetchFile: _fetchFile } = window.FFmpeg;
                     fetchFile = _fetchFile;
                     ffmpeg = createFFmpeg({
-                        corePath: './ffmpeg-core.js',
+                        corePath: 'https://unpkg.com/@ffmpeg/core@0.9.0/dist/ffmpeg-core.js',
                         log: true,
                     });
                     await ffmpeg.load();
