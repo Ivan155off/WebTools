@@ -356,54 +356,58 @@
 
 <!-- P2P Share Modal -->
 <div class="modal-overlay" id="p2pShareModal">
-  <div class="modal-box glass-modal p2p-modal">
+  <div class="modal-box glass-modal p2p-modal" style="max-width:520px;width:95%;">
     <div class="p2p-header">
-      <div class="p2p-title">📡 WebTools P2P QuickShare</div>
+      <div class="p2p-title">📡 P2P QuickShare</div>
       <button class="p2p-close-btn" id="p2pCloseBtn">×</button>
     </div>
     <div class="p2p-tabs">
-      <button class="p2p-tab-btn active" id="p2pTabSend">Send Files</button>
-      <button class="p2p-tab-btn" id="p2pTabReceive">Receive Files</button>
+      <button class="p2p-tab-btn active" id="p2pTabSend">📤 Send</button>
+      <button class="p2p-tab-btn" id="p2pTabReceive">📥 Receive</button>
     </div>
     <div class="p2p-body">
       <!-- Send View -->
       <div class="p2p-view" id="p2pSendView">
-        <div class="p2p-selector-container">
-          <p class="p2p-help-text">Select one of your active files to broadcast on the local network (or another browser tab on this device):</p>
-          <div class="custom-dropdown" id="p2pCustomDropdown">
-            <div class="custom-dropdown-trigger" id="p2pDropdownTrigger">
-              <span class="selected-value" id="p2pSelectedValue">-- Choose active file --</span>
-              <span class="arrow">▼</span>
-            </div>
-            <div class="custom-dropdown-options" id="p2pDropdownOptions"></div>
+        <p class="p2p-help-text" style="margin-bottom:12px;">Select a file, then share the code or QR with the receiver.</p>
+        <div class="custom-dropdown" id="p2pCustomDropdown">
+          <div class="custom-dropdown-trigger" id="p2pDropdownTrigger">
+            <span class="selected-value" id="p2pSelectedValue">-- Choose active file --</span>
+            <span class="arrow">▼</span>
           </div>
-          <button class="modal-btn btn-accent" id="p2pStartBroadcastBtn" style="margin-top: 15px; width: 100%;">🚀 Broadcast File</button>
+          <div class="custom-dropdown-options" id="p2pDropdownOptions"></div>
         </div>
-        <div class="p2p-broadcast-status" id="p2pBroadcastStatus" style="display: none; margin-top: 15px;">
-          <div class="p2p-pulse-container">
-            <div class="p2p-pulse-ring"></div>
-            <div class="p2p-pulse-ring delay-1"></div>
-            <div class="p2p-pulse-center">📡</div>
+        <button class="modal-btn btn-accent" id="p2pStartBroadcastBtn" style="margin-top:12px;width:100%;">🚀 Start Sharing</button>
+        <div id="p2pSenderPanel" style="display:none;margin-top:16px;text-align:center;">
+          <div style="font-size:13px;color:var(--c-muted);margin-bottom:6px;">Share this code with receiver:</div>
+          <div id="p2pMyCode" style="font-size:28px;font-weight:700;letter-spacing:6px;color:var(--c-accent);font-family:monospace;background:var(--c-surface);padding:10px 20px;border-radius:10px;display:inline-block;"></div>
+          <div style="margin-top:12px;">
+            <canvas id="p2pQRCanvas" width="160" height="160" style="border-radius:8px;background:#fff;padding:6px;"></canvas>
           </div>
-          <div class="p2p-status-label" style="margin-top: 10px;">Broadcasting "<span id="p2pBroadcastingName" class="highlight-text">file.txt</span>"</div>
-          <div class="p2p-info-box">
-            <span>Any other open WebTools tab on this device will see this file in their <strong>Receive</strong> tab!</span>
+          <div id="p2pSendStatus" style="margin-top:10px;font-size:13px;color:var(--c-muted);">Waiting for receiver...</div>
+          <div id="p2pSendProgress" style="display:none;margin-top:8px;">
+            <div style="background:var(--c-surface);border-radius:6px;height:8px;overflow:hidden;">
+              <div id="p2pSendBar" style="height:100%;width:0%;background:var(--c-accent);transition:width 0.2s;"></div>
+            </div>
+            <div id="p2pSendPct" style="font-size:12px;color:var(--c-muted);margin-top:4px;">0%</div>
           </div>
+          <button id="p2pStopBtn" class="modal-btn" style="margin-top:12px;width:100%;background:var(--c-danger,#ef4444);">✖ Stop Sharing</button>
         </div>
       </div>
       <!-- Receive View -->
-      <div class="p2p-view" id="p2pReceiveView" style="display: none;">
-        <div class="p2p-receiver-status">
-          <div class="p2p-pulse-container receive-pulse">
-            <div class="p2p-pulse-ring"></div>
-            <div class="p2p-pulse-center">📥</div>
-          </div>
-          <div class="p2p-status-label" id="p2pReceiveStatusText">Listening for files on local network...</div>
-          <div class="p2p-incoming-files" id="p2pIncomingFilesList">
-            <!-- Dynamic incoming files card will be rendered here -->
-            <div class="p2p-empty-state">No incoming files detected yet. Keep another tab broadcasting to receive!</div>
-          </div>
+      <div class="p2p-view" id="p2pReceiveView" style="display:none;">
+        <p class="p2p-help-text" style="margin-bottom:12px;">Enter the 6-digit code from the sender:</p>
+        <div style="display:flex;gap:8px;">
+          <input id="p2pCodeInput" type="text" maxlength="6" placeholder="e.g. ABC123" style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--c-border);background:var(--c-surface);color:var(--c-text);font-size:20px;letter-spacing:4px;text-align:center;font-family:monospace;text-transform:uppercase;">
+          <button id="p2pConnectBtn" class="modal-btn btn-accent" style="padding:10px 18px;">🔗 Connect</button>
         </div>
+        <div id="p2pReceiveStatus" style="margin-top:14px;font-size:13px;color:var(--c-muted);text-align:center;"></div>
+        <div id="p2pReceiveProgress" style="display:none;margin-top:8px;">
+          <div style="background:var(--c-surface);border-radius:6px;height:8px;overflow:hidden;">
+            <div id="p2pRecvBar" style="height:100%;width:0%;background:var(--c-accent);transition:width 0.2s;"></div>
+          </div>
+          <div id="p2pRecvPct" style="font-size:12px;color:var(--c-muted);margin-top:4px;">0%</div>
+        </div>
+        <div id="p2pIncomingFilesList" style="margin-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -1841,35 +1845,14 @@ virtualConsole.addEventListener('keydown', e => {
     }
 });
 
-// Autosave indicator
-let _autosaveTimer = null;
-function _showAutosaved() {
-    let ind = document.getElementById('autosave-indicator');
-    if (!ind) {
-        ind = document.createElement('div');
-        ind.id = 'autosave-indicator';
-        ind.style.cssText = 'position:fixed;bottom:12px;right:16px;background:var(--c-accent,#10b981);color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;opacity:0;transition:opacity 0.3s;z-index:9999;pointer-events:none;';
-        document.body.appendChild(ind);
-    }
-    ind.textContent = '✓ Autosaved';
-    ind.style.opacity = '1';
-    setTimeout(() => { ind.style.opacity = '0'; }, 1500);
-}
-
 virtualConsole.addEventListener('input', () => {
     const raw = virtualConsole.innerText;
     const item = activeFilesCache.find(f => f.id === loadedFileIndex);
     if (item) {
         item.isEdited = true; 
         item.editedContent = raw;
-        // Debounced autosave - save 1s after last keystroke
-        clearTimeout(_autosaveTimer);
-        _autosaveTimer = setTimeout(() => {
-            if (!db) return;
-            db.transaction('files', 'readwrite').objectStore('files').put(item);
-            saveEditToStore(getFileKey(item.fileObject), raw);
-            _showAutosaved();
-        }, 1000);
+        db.transaction('files', 'readwrite').objectStore('files').put(item);
+        saveEditToStore(getFileKey(item.fileObject), raw);
     }
     
     const sel = window.getSelection();
@@ -3161,71 +3144,78 @@ window.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════════════
-//  P2P QUICKSHARE SYSTEM
-// ═══════════════════════════════════════════════════════════
-const p2pChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('webtools_p2p_channel') : null;
-const p2pTabId = Math.random().toString(36).substring(2, 10);
-let currentlyBroadcastingFile = null;
+// ═══════════════════════════════════════════════════════════════════════
+//  P2P QUICKSHARE SYSTEM - WebRTC via PeerJS
+// ═══════════════════════════════════════════════════════════════════════
+
+function _loadScript(src) {
+    return new Promise((res, rej) => {
+        if (document.querySelector(`script[src="${src}"]`)) return res();
+        const s = document.createElement('script');
+        s.src = src; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+    });
+}
+
+let _peer = null;
+let _peerConn = null;
+let _p2pSendingFile = null;
+let selectedP2PFileId = '';
+
+function _genCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return 'WT' + Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+async function _drawQR(text, canvas) {
+    try {
+        await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+        canvas.style.display = 'none';
+        const div = document.createElement('div');
+        div.id = 'p2pQRDiv';
+        div.style.cssText = 'display:inline-block;background:#fff;padding:6px;border-radius:8px;';
+        const old = document.getElementById('p2pQRDiv');
+        if (old) old.remove();
+        canvas.parentNode.insertBefore(div, canvas);
+        new QRCode(div, { text, width:160, height:160, correctLevel: QRCode.CorrectLevel.M });
+    } catch(e) { console.warn('QR failed', e); }
+}
 
 p2pShareToggle.addEventListener('click', () => {
     p2pShareModal.classList.add('active');
     populateP2PFilesDropdown();
 });
-
-p2pCloseBtn.addEventListener('click', () => {
-    p2pShareModal.classList.remove('active');
-});
-
-p2pShareModal.addEventListener('click', e => {
-    if (e.target === p2pShareModal) p2pShareModal.classList.remove('active');
-});
+p2pCloseBtn.addEventListener('click', () => p2pShareModal.classList.remove('active'));
+p2pShareModal.addEventListener('click', e => { if (e.target === p2pShareModal) p2pShareModal.classList.remove('active'); });
 
 p2pTabSend.addEventListener('click', () => {
-    p2pTabSend.classList.add('active');
-    p2pTabReceive.classList.remove('active');
-    p2pSendView.style.display = 'block';
-    p2pReceiveView.style.display = 'none';
+    p2pTabSend.classList.add('active'); p2pTabReceive.classList.remove('active');
+    p2pSendView.style.display = 'block'; p2pReceiveView.style.display = 'none';
 });
-
 p2pTabReceive.addEventListener('click', () => {
-    p2pTabReceive.classList.add('active');
-    p2pTabSend.classList.remove('active');
-    p2pReceiveView.style.display = 'block';
-    p2pSendView.style.display = 'none';
+    p2pTabReceive.classList.add('active'); p2pTabSend.classList.remove('active');
+    p2pReceiveView.style.display = 'block'; p2pSendView.style.display = 'none';
 });
 
-let selectedP2PFileId = "";
-
-// Close custom dropdown when clicking outside
 window.addEventListener('click', () => {
-    const dropdown = document.getElementById('p2pCustomDropdown');
-    const options = document.getElementById('p2pDropdownOptions');
-    if (dropdown && options) {
-        dropdown.classList.remove('open');
-        options.classList.remove('show');
-    }
+    const dd = document.getElementById('p2pCustomDropdown');
+    const opts = document.getElementById('p2pDropdownOptions');
+    if (dd && opts) { dd.classList.remove('open'); opts.classList.remove('show'); }
 });
 
 function populateP2PFilesDropdown() {
     const trigger = document.getElementById('p2pDropdownTrigger');
     const optionsCont = document.getElementById('p2pDropdownOptions');
     const selectedVal = document.getElementById('p2pSelectedValue');
-    
     if (!trigger || !optionsCont || !selectedVal) return;
-    
     optionsCont.innerHTML = '';
     selectedP2PFileId = '';
     selectedVal.textContent = '-- Choose active file --';
-    
-    // Setup trigger toggle
     trigger.onclick = (e) => {
         e.stopPropagation();
-        const dropdown = document.getElementById('p2pCustomDropdown');
-        dropdown.classList.toggle('open');
+        document.getElementById('p2pCustomDropdown').classList.toggle('open');
         optionsCont.classList.toggle('show');
     };
-    
-    // Add default empty option
     const defOpt = document.createElement('div');
     defOpt.className = 'custom-dropdown-option selected';
     defOpt.textContent = '-- Choose active file --';
@@ -3235,134 +3225,197 @@ function populateP2PFilesDropdown() {
         selectedVal.textContent = '-- Choose active file --';
         optionsCont.classList.remove('show');
         document.getElementById('p2pCustomDropdown').classList.remove('open');
-        
         optionsCont.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('selected'));
         defOpt.classList.add('selected');
     };
     optionsCont.appendChild(defOpt);
-
-    if (activeFilesCache && activeFilesCache.length > 0) {
-        activeFilesCache.forEach(file => {
-            const opt = document.createElement('div');
-            opt.className = 'custom-dropdown-option';
-            opt.textContent = `${file.displayName || file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-            opt.onclick = (e) => {
-                e.stopPropagation();
-                selectedP2PFileId = file.id;
-                selectedVal.textContent = `${file.displayName || file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-                optionsCont.classList.remove('show');
-                document.getElementById('p2pCustomDropdown').classList.remove('open');
-                
-                optionsCont.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('selected'));
-                opt.classList.add('selected');
-            };
-            optionsCont.appendChild(opt);
-        });
-    }
+    (activeFilesCache || []).forEach(file => {
+        const opt = document.createElement('div');
+        opt.className = 'custom-dropdown-option';
+        const sz = file.size > 1048576 ? (file.size/1048576).toFixed(1)+' MB' : (file.size/1024).toFixed(1)+' KB';
+        opt.textContent = `${file.displayName || file.name} (${sz})`;
+        opt.onclick = (e) => {
+            e.stopPropagation();
+            selectedP2PFileId = file.id;
+            selectedVal.textContent = opt.textContent;
+            optionsCont.classList.remove('show');
+            document.getElementById('p2pCustomDropdown').classList.remove('open');
+            optionsCont.querySelectorAll('.custom-dropdown-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+        };
+        optionsCont.appendChild(opt);
+    });
 }
 
-p2pStartBroadcastBtn.addEventListener('click', () => {
-    const selectedId = selectedP2PFileId;
-    if (!selectedId) {
-        showToast('⚠️ Please select a file to broadcast');
+// SENDER
+document.getElementById('p2pStartBroadcastBtn').addEventListener('click', async () => {
+    if (!selectedP2PFileId) { showToast('⚠️ Choose a file first'); return; }
+    const fileItem = activeFilesCache.find(f => f.id == selectedP2PFileId);
+    if (!fileItem) return;
+    _p2pSendingFile = fileItem;
+
+    document.getElementById('p2pStartBroadcastBtn').disabled = true;
+    document.getElementById('p2pSendStatus').textContent = 'Connecting...';
+    document.getElementById('p2pSenderPanel').style.display = 'block';
+
+    try {
+        await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js');
+    } catch(e) {
+        showToast('❌ Failed to load PeerJS');
+        document.getElementById('p2pStartBroadcastBtn').disabled = false;
         return;
     }
-    const fileItem = activeFilesCache.find(f => f.id == selectedId);
-    if (!fileItem) return;
 
-    currentlyBroadcastingFile = fileItem;
-    p2pBroadcastingName.textContent = fileItem.displayName || fileItem.name;
-    p2pBroadcastStatus.style.display = 'block';
-    showToast('🚀 Broadcasting file on local channel!');
+    if (_peer) { try { _peer.destroy(); } catch(e){} }
 
-    sendDiscoveryBroadcast(fileItem);
-});
+    const code = _genCode();
+    document.getElementById('p2pMyCode').textContent = code;
+    const shareUrl = window.location.href.split('?')[0] + '?p2p=' + code;
+    _drawQR(shareUrl, document.getElementById('p2pQRCanvas'));
 
-function sendDiscoveryBroadcast(fileItem) {
-    if (!p2pChannel) return;
-    p2pChannel.postMessage({
-        type: 'WT_DISCOVER',
-        senderTabId: p2pTabId,
-        id: fileItem.id,
-        name: fileItem.displayName || fileItem.name,
-        size: fileItem.size,
-        mimeType: fileItem.type || 'text/plain'
+    _peer = new Peer(code, {
+        host: '0.peerjs.com', port: 443, secure: true, path: '/',
+        config: { iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+        ]}
     });
-}
 
-if (p2pChannel) {
-    p2pChannel.onmessage = (event) => {
-        const msg = event.data;
-        if (!msg) return;
+    _peer.on('open', () => {
+        document.getElementById('p2pSendStatus').textContent = '⏳ Waiting for receiver...';
+    });
 
-        if (msg.type === 'WT_QUERY_ACTIVE_BROADCASTS' && currentlyBroadcastingFile) {
-            sendDiscoveryBroadcast(currentlyBroadcastingFile);
-        }
+    _peer.on('error', err => {
+        document.getElementById('p2pSendStatus').textContent = '❌ ' + err.type;
+        showToast('❌ P2P: ' + err.type);
+        document.getElementById('p2pStartBroadcastBtn').disabled = false;
+    });
 
-        if (msg.type === 'WT_DISCOVER' && msg.senderTabId !== p2pTabId) {
-            renderIncomingFileCard(msg);
-        }
+    _peer.on('connection', conn => {
+        _peerConn = conn;
+        document.getElementById('p2pSendStatus').textContent = '✅ Receiver connected! Sending...';
+        showToast('✅ Receiver connected!');
 
-        if (msg.type === 'WT_REQUEST_DATA' && msg.senderTabId === p2pTabId && currentlyBroadcastingFile && currentlyBroadcastingFile.id == msg.fileId) {
-            const fileObj = currentlyBroadcastingFile.fileObject;
-            p2pChannel.postMessage({
-                type: 'WT_TRANSFER_DATA',
-                receiverTabId: msg.receiverTabId,
-                fileObject: fileObj,
-                name: currentlyBroadcastingFile.displayName || currentlyBroadcastingFile.name,
-                size: currentlyBroadcastingFile.size,
-                typeStr: currentlyBroadcastingFile.type
-            });
-        }
-
-        if (msg.type === 'WT_TRANSFER_DATA' && msg.receiverTabId === p2pTabId) {
-            saveMultipleFiles([msg.fileObject]);
-            showToast('📥 Ingested Shared File: ' + msg.name);
-            p2pShareModal.classList.remove('active');
-        }
-    };
-
-    p2pTabReceive.addEventListener('click', () => {
-        p2pIncomingFilesList.innerHTML = '<div class="p2p-empty-state">Scanning local channels for active broadcasters...<\/div>';
-        p2pChannel.postMessage({ type: 'WT_QUERY_ACTIVE_BROADCASTS' });
-        setTimeout(() => {
-            if (p2pIncomingFilesList.querySelector('.p2p-empty-state')) {
-                p2pIncomingFilesList.innerHTML = '<div class="p2p-empty-state">No files detected. Make sure another tab of WebTools is open and actively broadcasting.<\/div>';
+        conn.on('open', () => {
+            const file = _p2pSendingFile.fileObject;
+            const CHUNK = 64 * 1024;
+            const totalChunks = Math.ceil(file.size / CHUNK);
+            conn.send({ type: 'meta', name: _p2pSendingFile.displayName || _p2pSendingFile.name, size: file.size, mime: file.type, totalChunks });
+            document.getElementById('p2pSendProgress').style.display = 'block';
+            let bytesSent = 0;
+            function sendChunk(i) {
+                if (i >= totalChunks) {
+                    conn.send({ type: 'done' });
+                    document.getElementById('p2pSendStatus').textContent = '✅ Done! File sent successfully.';
+                    showToast('✅ File sent!');
+                    return;
+                }
+                const slice = file.slice(i * CHUNK, (i+1) * CHUNK);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    conn.send({ type: 'chunk', index: i, data: reader.result });
+                    bytesSent += reader.result.byteLength;
+                    const pct = Math.round(bytesSent / file.size * 100);
+                    document.getElementById('p2pSendBar').style.width = pct + '%';
+                    document.getElementById('p2pSendPct').textContent = pct + '%';
+                    setTimeout(() => sendChunk(i + 1), 5);
+                };
+                reader.readAsArrayBuffer(slice);
             }
-        }, 2000);
-    });
-}
-
-function renderIncomingFileCard(info) {
-    if (document.getElementById(`incoming-${info.id}`)) return;
-
-    const empty = p2pIncomingFilesList.querySelector('.p2p-empty-state');
-    if (empty) empty.remove();
-
-    const card = document.createElement('div');
-    card.className = 'p2p-file-card';
-    card.id = `incoming-${info.id}`;
-    card.innerHTML = `
-        <div class="p2p-file-info">
-            <span class="p2p-file-name">${info.name}<\/span>
-            <span class="p2p-file-size">${(info.size / 1024).toFixed(1)} KB<\/span>
-        <\/div>
-        <button class="p2p-file-action-btn" id="acceptBtn-${info.id}">Accept<\/button>
-    `;
-
-    p2pIncomingFilesList.appendChild(card);
-
-    card.querySelector(`#acceptBtn-${info.id}`).addEventListener('click', () => {
-        if (!p2pChannel) return;
-        showToast('📥 Requesting file content...');
-        p2pChannel.postMessage({
-            type: 'WT_REQUEST_DATA',
-            senderTabId: info.senderTabId,
-            receiverTabId: p2pTabId,
-            fileId: info.id
+            sendChunk(0);
         });
     });
+});
+
+document.getElementById('p2pStopBtn').addEventListener('click', () => {
+    if (_peer) { try { _peer.destroy(); } catch(e){} _peer = null; }
+    document.getElementById('p2pSenderPanel').style.display = 'none';
+    document.getElementById('p2pStartBroadcastBtn').disabled = false;
+    document.getElementById('p2pSendProgress').style.display = 'none';
+    document.getElementById('p2pSendBar').style.width = '0%';
+    showToast('⏹ Sharing stopped');
+});
+
+// RECEIVER
+document.getElementById('p2pConnectBtn').addEventListener('click', _p2pConnect);
+document.getElementById('p2pCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') _p2pConnect(); });
+
+// Auto-fill code from URL param
+(function() {
+    const u = new URLSearchParams(window.location.search).get('p2p');
+    if (u) {
+        const inp = document.getElementById('p2pCodeInput');
+        if (inp) inp.value = u.toUpperCase();
+    }
+})();
+
+async function _p2pConnect() {
+    const code = document.getElementById('p2pCodeInput').value.trim().toUpperCase();
+    if (code.length < 4) { showToast('⚠️ Enter the code from sender'); return; }
+    document.getElementById('p2pReceiveStatus').textContent = '🔗 Connecting...';
+
+    try {
+        await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js');
+    } catch(e) { showToast('❌ Failed to load PeerJS'); return; }
+
+    if (_peer) { try { _peer.destroy(); } catch(e){} }
+
+    const myId = 'recv-' + Math.random().toString(36).slice(2,10);
+    _peer = new Peer(myId, {
+        host: '0.peerjs.com', port: 443, secure: true, path: '/',
+        config: { iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+        ]}
+    });
+
+    _peer.on('open', () => {
+        document.getElementById('p2pReceiveStatus').textContent = '🔗 Reaching sender...';
+        const conn = _peer.connect(code, { reliable: true });
+        _peerConn = conn;
+        let fileChunks = [];
+        let fileMeta = null;
+
+        conn.on('open', () => {
+            document.getElementById('p2pReceiveStatus').textContent = '✅ Connected! Waiting for file...';
+        });
+
+        conn.on('data', data => {
+            if (data.type === 'meta') {
+                fileMeta = data;
+                fileChunks = new Array(data.totalChunks);
+                document.getElementById('p2pReceiveProgress').style.display = 'block';
+                document.getElementById('p2pReceiveStatus').textContent = '📥 Receiving: ' + data.name;
+            } else if (data.type === 'chunk') {
+                fileChunks[data.index] = data.data;
+                const received = fileChunks.filter(Boolean).length;
+                const pct = Math.round(received / fileMeta.totalChunks * 100);
+                document.getElementById('p2pRecvBar').style.width = pct + '%';
+                document.getElementById('p2pRecvPct').textContent = pct + '%';
+            } else if (data.type === 'done') {
+                const blob = new Blob(fileChunks, { type: fileMeta.mime || 'application/octet-stream' });
+                const file = new File([blob], fileMeta.name, { type: fileMeta.mime });
+                saveMultipleFiles([file]);
+                showToast('✅ Received: ' + fileMeta.name);
+                document.getElementById('p2pReceiveStatus').textContent = '✅ File saved to workspace!';
+                document.getElementById('p2pReceiveProgress').style.display = 'none';
+                if (_peer) { try { _peer.destroy(); } catch(e){} _peer = null; }
+            }
+        });
+
+        conn.on('error', err => {
+            document.getElementById('p2pReceiveStatus').textContent = '❌ ' + err.message;
+        });
+    });
+
+    _peer.on('error', err => {
+        const msg = err.type === 'peer-unavailable' ? 'Sender not found. Check the code and try again.' : err.message;
+        document.getElementById('p2pReceiveStatus').textContent = '❌ ' + msg;
+        showToast('❌ ' + msg);
+    });
 }
+
+
 
 // ═══════════════════════════════════════════════════════════
 //  TOAST ALERTS
